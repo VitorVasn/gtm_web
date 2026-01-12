@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>GTM - Gr. Tático de Motocicletas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- CABEÇALHO -->
+  <header class="topo">
+    <img src="images/gtm.png" class="logo esquerda">
+    <h1>GTM - GRUPAMENTO TÁTICO DE MOTOCICLETAS</h1>
+    <img src="images/morada.png" class="logo direita">
+  </header>
+
+  <!-- CADASTRO -->
+  <section class="card">
+    <h2>Cadastro de GTM</h2>
+
+    <input type="text" id="posto" placeholder="Posto / Patente">
+    <input type="text" id="nomeGuerra" placeholder="Nome de Guerra">
+    <input type="text" id="passaporte" placeholder="Passaporte (ID)">
+
+    <select id="funcao">
+      <option value="">Selecione a Função</option>
+      <option value="Estagiário">Estagiário</option>
+      <option value="Piloto Oficial">Piloto Oficial</option>
+      <option value="Comando">Comando</option>
+      <option value="Subcomando">Subcomando</option>
+    </select>
+
+    <button onclick="cadastrarGTM()">Cadastrar</button>
+  </section>
+
+  <!-- CONTROLE DE SERVIÇO -->
+  <section class="card">
+    <h2>Controle de Serviço</h2>
+
+    <input type="text" id="passaporteServico" placeholder="Passaporte do GTM">
+
+    <button onclick="iniciarServico()">Iniciar Serviço</button>
+    <button onclick="finalizarServico()">Sair de Serviço</button>
+
+    <p id="cronometro">00:00:00</p>
+  </section>
+
+  <!-- RANKING -->
+  <section class="card">
+    <h2>Ranking por Pontuação</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Posto</th>
+          <th>Nome de Guerra</th>
+          <th>Horas</th>
+          <th>Pontos</th>
+        </tr>
+      </thead>
+      <tbody id="ranking"></tbody>
+    </table>
+  </section>
+
+  <!-- ABA REGISTROS -->
+  <section class="card">
+    <h2>Registros Operacionais - GTM</h2>
+
+    <!-- QRT -->
+    <h3>🚨 QRT - Socorro a Oficiais</h3>
+    <input type="text" id="qrtPassaporte" placeholder="Passaporte do GTM">
+    <input type="number" id="qrtQuantidade" placeholder="Quantidade de QRTs">
+    <button onclick="registrarQRT()">Registrar QRT</button>
+
+    <hr>
+
+    <!-- ACOMPANHAMENTO -->
+    <h3>🏍️ Acompanhamento</h3>
+    <input type="text" id="acompPassaporte" placeholder="Passaporte do GTM">
+    <select id="acompStatus">
+      <option value="">Status do Acompanhamento</option>
+      <option value="concluido">Concluído</option>
+      <option value="qta">QTA (caiu)</option>
+    </select>
+    <button onclick="registrarAcompanhamento()">Registrar Acompanhamento</button>
+
+    <hr>
+
+    <!-- PRISÃO -->
+    <h3>🔒 Prisão</h3>
+    <input type="text" id="prisaoPassaporteGTM" placeholder="Passaporte do GTM">
+    <input type="text" id="nomePreso" placeholder="Nome do Preso">
+    <input type="text" id="passaportePreso" placeholder="Passaporte do Preso">
+    <input type="number" id="qtdPresos" placeholder="Quantidade de Presos">
+    <button onclick="registrarPrisao()">Registrar Prisão</button>
+  </section>
+
+  <!-- PAINEL DO COMANDO -->
+  <section class="card">
+    <h2>Painel do Comando / Subcomando</h2>
+
+    <input type="password" id="senhaComando" placeholder="Senha do Comando">
+    <button onclick="entrarPainel()">Entrar no Painel</button>
+
+    <div id="painelComando" style="display:none; margin-top:15px;">
+      <button onclick="fecharPainel()">Fechar Painel</button>
+
+      <h3>Exonerar Piloto</h3>
+      <input type="text" id="passaporteExonerar" placeholder="Passaporte do GTM">
+      <button onclick="exonerarGTM()">Exonerar / Deletar</button>
+
+      <h3>Controle de Ranking</h3>
+      <button onclick="zerarPontuacaoRanking()">Zerar Pontuação do Ranking</button>
+
+
+      <h3>Enviar Advertência / Aviso</h3>
+      <textarea id="avisoTexto" placeholder="Digite o aviso ou advertência..." rows="4"></textarea>
+      <button onclick="enviarAviso()">Publicar Aviso</button>
+    </div>
+  </section>
+
+  <!-- QUADRO DE AVISOS -->
+  <section class="card">
+    <h2>Quadro de Avisos - GTM</h2>
+    <ul id="listaAvisos"></ul>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

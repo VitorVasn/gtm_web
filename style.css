@@ -1,0 +1,174 @@
+/* RESET */
+* {
+  box-sizing: border-box;
+}
+
+/* BODY */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: radial-gradient(circle at top, #0f2a1d, #06140d);
+  color: #e0e0e0;
+}
+
+/* TOPO */
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #001f14, #003322, #001f14);
+  padding: 15px 30px;
+  border-bottom: 2px solid #00ff99;
+  box-shadow: 0 4px 20px rgba(0,255,153,0.2);
+}
+
+.topo h1 {
+  color: #00ff99;
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0,255,153,0.6);
+}
+
+/* LOGOS */
+.logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px #00ff99);
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.08);
+}
+
+/* CARDS */
+.card {
+  background: rgba(0, 43, 28, 0.75);
+  backdrop-filter: blur(6px);
+  margin: 25px;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,255,153,0.5);
+  box-shadow: 0 0 20px rgba(0,255,153,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(0,255,153,0.25);
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #00ff99;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(0,255,153,0.3);
+  padding-bottom: 5px;
+}
+
+.card h3 {
+  color: #7fffd4;
+}
+
+/* INPUTS */
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  background-color: #001f14;
+  color: #e0e0e0;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.6);
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  background-color: #003322;
+  box-shadow: 0 0 10px rgba(0,255,153,0.6);
+}
+
+/* BOTÕES */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #00ff99, #00cc77);
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  color: #003322;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,255,153,0.3);
+}
+
+button:hover {
+  background: linear-gradient(135deg, #00cc77, #00ff99);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 20px rgba(0,255,153,0.7);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* TABELA */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th {
+  background-color: #001f14;
+  color: #00ff99;
+  padding: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+td {
+  background-color: rgba(0, 31, 20, 0.7);
+  padding: 10px;
+}
+
+th, td {
+  border: 1px solid rgba(0,255,153,0.4);
+}
+
+/* CRONÔMETRO */
+#cronometro {
+  font-size: 32px;
+  text-align: center;
+  margin-top: 10px;
+  color: #00ff99;
+  text-shadow: 0 0 10px rgba(0,255,153,0.7);
+}
+
+/* AVISOS */
+#listaAvisos {
+  list-style: none;
+  padding: 0;
+}
+
+#listaAvisos li {
+  background: linear-gradient(135deg, #001f14, #003322);
+  border: 1px solid rgba(0,255,153,0.5);
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,255,153,0.15);
+}
+
+/* DIVISOR */
+hr {
+  margin: 20px 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #00ff99, transparent);
+}
