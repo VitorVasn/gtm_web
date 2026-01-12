@@ -1,197 +1,132 @@
-const SENHA_COMANDO = "gtm2025";
+const BASE_URL = "https://gtm-backend-8mh0.onrender.com"; // Backend Render
+let servicoAtual = null;
+let intervalo = null;
+let comandoLogado = false;
 
-let gtms = JSON.parse(localStorage.getItem("gtms")) || [];
-let avisos = JSON.parse(localStorage.getItem("avisos")) || [];
-
-let cronometroIntervalo = null;
-let inicioServico = null;
-
-// ================== SALVAR ==================
-function salvar() {
-  localStorage.setItem("gtms", JSON.stringify(gtms));
-  localStorage.setItem("avisos", JSON.stringify(avisos));
-}
-
-// ================== CADASTRO ==================
-function cadastrarGTM() {
-  const posto = postoInput().value.trim();
-  const nome = nomeGuerraInput().value.trim();
-  const passaporte = passaporteInput().value.trim();
-  const funcao = funcaoSelect().value;
+// ====================== CADASTRO ======================
+async function cadastrarGTM() {
+  const posto = document.getElementById("posto").value;
+  const nome = document.getElementById("nomeGuerra").value;
+  const passaporte = document.getElementById("passaporte").value;
+  const funcao = document.getElementById("funcao").value;
 
   if (!posto || !nome || !passaporte || !funcao) {
     alert("Preencha todos os campos!");
     return;
   }
 
-  if (gtms.find(g => g.passaporte === passaporte)) {
-    alert("Passaporte já cadastrado!");
+  try {
+    const res = await fetch(`${BASE_URL}/gtms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ posto, nome, passaporte, funcao })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("GTM cadastrado com sucesso!");
+      atualizarRanking();
+    } else {
+      alert(data.message);
+    }
+  } catch (err) {
+    alert("Erro ao cadastrar GTM: " + err.message);
+  }
+}
+
+// ====================== SERVIÇO ======================
+async function iniciarServico() {
+  const passaporte = document.getElementById("passaporteServico").value;
+
+  if (servicoAtual) {
+    alert("Já existe um serviço em andamento!");
     return;
   }
 
-  gtms.push({
-    posto,
-    nome,
-    passaporte,
-    funcao,
-    horas: 0,
-    pontos: 0
-  });
-
-  salvar();
-  atualizarRanking();
-  alert("GTM cadastrado com sucesso!");
+  servicoAtual = { passaporte, inicio: Date.now() };
+  iniciarCronometro();
 }
 
-// ================== SERVIÇO ==================
-function iniciarServico() {
-  const passaporte = document.getElementById("passaporteServico").value.trim();
-  const gtm = gtms.find(g => g.passaporte === passaporte);
-
-  if (!gtm) {
-    alert("GTM não encontrado!");
-    return;
-  }
-
-  inicioServico = new Date();
-
-  if (cronometroIntervalo) clearInterval(cronometroIntervalo);
-
-  cronometroIntervalo = setInterval(() => {
-    const agora = new Date();
-    const diff = new Date(agora - inicioServico);
-    const h = String(diff.getUTCHours()).padStart(2, "0");
-    const m = String(diff.getUTCMinutes()).padStart(2, "0");
-    const s = String(diff.getUTCSeconds()).padStart(2, "0");
-    document.getElementById("cronometro").innerText = `${h}:${m}:${s}`;
-  }, 1000);
-
-  alert("Serviço iniciado!");
-}
-
-function finalizarServico() {
-  if (!inicioServico) {
+async function finalizarServico() {
+  if (!servicoAtual) {
     alert("Nenhum serviço em andamento!");
     return;
   }
 
-  const passaporte = document.getElementById("passaporteServico").value.trim();
-  const gtm = gtms.find(g => g.passaporte === passaporte);
+  const fim = Date.now();
+  const duracaoMs = fim - servicoAtual.inicio;
+  const duracaoHoras = duracaoMs / (1000 * 60 * 60);
 
-  if (!gtm) {
-    alert("GTM não encontrado!");
-    return;
+  try {
+    const res = await fetch(`${BASE_URL}/gtms/${servicoAtual.passaporte}/horas`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ horas: duracaoHoras })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(`Serviço finalizado e ${duracaoHoras.toFixed(2)} horas contabilizadas!`);
+      atualizarRanking();
+    }
+  } catch (err) {
+    alert("Erro ao finalizar serviço: " + err.message);
   }
 
-  const fim = new Date();
-  const diffMs = fim - inicioServico;
-  const horas = diffMs / (1000 * 60 * 60);
+  servicoAtual = null;
+  pararCronometro();
+}
 
-  gtm.horas = Number(gtm.horas) + horas;
+// ====================== CRONÔMETRO ======================
+function iniciarCronometro() {
+  const inicio = Date.now();
+  intervalo = setInterval(() => {
+    const agora = Date.now();
+    const diff = agora - inicio;
+    const horas = String(Math.floor(diff / 3600000)).padStart(2, "0");
+    const minutos = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
+    const segundos = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+    document.getElementById("cronometro").innerText = `${horas}:${minutos}:${segundos}`;
+  }, 1000);
+}
 
-  clearInterval(cronometroIntervalo);
-  cronometroIntervalo = null;
-  inicioServico = null;
+function pararCronometro() {
+  clearInterval(intervalo);
   document.getElementById("cronometro").innerText = "00:00:00";
-
-  salvar();
-  atualizarRanking();
-
-  alert(`Serviço finalizado! +${horas.toFixed(2)} horas contabilizadas`);
 }
 
-// ================== RANKING ==================
-function atualizarRanking() {
-  const tbody = document.getElementById("ranking");
-  tbody.innerHTML = "";
+// ====================== RANKING ======================
+async function atualizarRanking() {
+  try {
+    const res = await fetch(`${BASE_URL}/gtms`);
+    const gtms = await res.json();
+    const tbody = document.getElementById("ranking");
+    tbody.innerHTML = "";
 
-  const ordenado = [...gtms].sort((a, b) => b.horas - a.horas || b.pontos - a.pontos);
-
-  ordenado.forEach(gtm => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${gtm.posto}</td>
-      <td>${gtm.nome}</td>
-      <td>${Number(gtm.horas).toFixed(2)}</td>
-      <td>${Number(gtm.pontos)}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
-}
-
-// ================== QRT ==================
-function registrarQRT() {
-  const passaporte = document.getElementById("qrtPassaporte").value.trim();
-  const qtd = Number(document.getElementById("qrtQuantidade").value);
-
-  const gtm = gtms.find(g => g.passaporte === passaporte);
-  if (!gtm || isNaN(qtd) || qtd <= 0) {
-    alert("Dados inválidos!");
-    return;
+    gtms.sort((a, b) => b.horas - a.horas).forEach(g => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${g.posto}</td>
+        <td>${g.nome}</td>
+        <td>${g.horas.toFixed(2)} h</td>
+        <td>${g.pontos}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Erro ao atualizar ranking:", err);
   }
-
-  const pontos = qtd * 5;
-  gtm.pontos = Number(gtm.pontos) + pontos;
-
-  salvar();
-  atualizarRanking();
-
-  alert(`QRT registrado! +${pontos} pontos`);
 }
 
-// ================== ACOMPANHAMENTO ==================
-function registrarAcompanhamento() {
-  const passaporte = document.getElementById("acompPassaporte").value.trim();
-  const status = document.getElementById("acompStatus").value;
+// ====================== PAINEL DO COMANDO ======================
+const SENHA_COMANDO = "gtm2025";
 
-  const gtm = gtms.find(g => g.passaporte === passaporte);
-  if (!gtm || !status) {
-    alert("Dados inválidos!");
-    return;
-  }
-
-  let pontos = 0;
-  if (status === "concluido") pontos = 10;
-  if (status === "qta") pontos = 3;
-
-  gtm.pontos = Number(gtm.pontos) + pontos;
-
-  salvar();
-  atualizarRanking();
-
-  alert(`Acompanhamento registrado! +${pontos} pontos`);
-}
-
-// ================== PRISÃO ==================
-function registrarPrisao() {
-  const passaporte = document.getElementById("prisaoPassaporteGTM").value.trim();
-  const nomePreso = document.getElementById("nomePreso").value.trim();
-  const passaportePreso = document.getElementById("passaportePreso").value.trim();
-  const qtd = Number(document.getElementById("qtdPresos").value);
-
-  const gtm = gtms.find(g => g.passaporte === passaporte);
-  if (!gtm || !nomePreso || !passaportePreso || isNaN(qtd) || qtd <= 0) {
-    alert("Preencha todos os campos!");
-    return;
-  }
-
-  const pontos = qtd * 8;
-  gtm.pontos = Number(gtm.pontos) + pontos;
-
-  salvar();
-  atualizarRanking();
-
-  alert(`Prisão registrada! +${pontos} pontos`);
-}
-
-// ================== PAINEL COMANDO ==================
 function entrarPainel() {
   const senha = document.getElementById("senhaComando").value;
   if (senha === SENHA_COMANDO) {
     document.getElementById("painelComando").style.display = "block";
-    alert("Acesso liberado!");
+    comandoLogado = true;
+    alert("Acesso liberado ao Painel do Comando!");
+    carregarAvisos();
   } else {
     alert("Senha incorreta!");
   }
@@ -199,61 +134,177 @@ function entrarPainel() {
 
 function fecharPainel() {
   document.getElementById("painelComando").style.display = "none";
+  document.getElementById("senhaComando").value = "";
+  comandoLogado = false;
+  carregarAvisos();
 }
 
- // ================== ZERAR RANKING ================== 
-function zerarPontuacaoRanking() {
-  const confirmar = confirm("⚠️ ATENÇÃO: Isso irá ZERAR a pontuação de TODOS os GTMs. Deseja continuar?");
-  if (!confirmar) return;
+// ====================== EXONERAR ======================
+async function exonerarGTM() {
+  const passaporte = document.getElementById("passaporteExonerar").value;
+  if (!passaporte) return alert("Digite o passaporte!");
 
-  gtms.forEach(gtm => {
-    gtm.pontos = 0;
-  });
-
-  salvar();
-  atualizarRanking();
-
-  alert("✅ Pontuação de todos os GTMs foi zerada com sucesso!");
+  try {
+    const res = await fetch(`${BASE_URL}/gtms/${passaporte}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.success) {
+      alert(`GTM ${data.nome} exonerado com sucesso!`);
+      atualizarRanking();
+    }
+  } catch (err) {
+    alert("Erro ao exonerar GTM: " + err.message);
+  }
 }
 
+// ====================== AVISOS ======================
+async function enviarAviso() {
+  const texto = document.getElementById("avisoTexto").value;
+  if (!texto) return alert("Digite o aviso!");
 
-// ================== EXONERAR ==================
-function exonerarGTM() {
-  const passaporte = document.getElementById("passaporteExonerar").value.trim();
-  gtms = gtms.filter(g => g.passaporte !== passaporte);
-  salvar();
-  atualizarRanking();
-  alert("GTM exonerado!");
+  try {
+    const res = await fetch(`${BASE_URL}/avisos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("avisoTexto").value = "";
+      carregarAvisos();
+      alert("Aviso publicado!");
+    }
+  } catch (err) {
+    alert("Erro ao enviar aviso: " + err.message);
+  }
 }
 
-// ================== AVISOS ==================
-function enviarAviso() {
-  const texto = document.getElementById("avisoTexto").value.trim();
-  if (!texto) return;
+async function carregarAvisos() {
+  try {
+    const res = await fetch(`${BASE_URL}/avisos`);
+    const avisos = await res.json();
+    const ul = document.getElementById("listaAvisos");
+    ul.innerHTML = "";
 
-  avisos.push(texto);
-  salvar();
-  atualizarAvisos();
-  document.getElementById("avisoTexto").value = "";
+    avisos.forEach((a, index) => {
+      const li = document.createElement("li");
+      let botoes = "";
+      if (comandoLogado) {
+        botoes = `
+          <br>
+          <button onclick="editarAviso(${index})">Editar</button>
+          <button onclick="apagarAviso(${index})">Apagar</button>
+        `;
+      }
+      li.innerHTML = `<strong>${a.data}</strong><br>${a.texto}${botoes}`;
+      ul.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Erro ao carregar avisos:", err);
+  }
 }
 
-function atualizarAvisos() {
-  const ul = document.getElementById("listaAvisos");
-  ul.innerHTML = "";
-
-  avisos.forEach((aviso, index) => {
-    const li = document.createElement("li");
-    li.innerText = aviso;
-    ul.appendChild(li);
-  });
+async function apagarAviso(index) {
+  if (!comandoLogado) return alert("Acesso negado!");
+  try {
+    const res = await fetch(`${BASE_URL}/avisos/${index}`, { method: "DELETE" });
+    await res.json();
+    carregarAvisos();
+  } catch (err) {
+    alert("Erro ao apagar aviso: " + err.message);
+  }
 }
 
-// ================== HELPERS ==================
-function postoInput() { return document.getElementById("posto"); }
-function nomeGuerraInput() { return document.getElementById("nomeGuerra"); }
-function passaporteInput() { return document.getElementById("passaporte"); }
-function funcaoSelect() { return document.getElementById("funcao"); }
+async function editarAviso(index) {
+  if (!comandoLogado) return alert("Acesso negado!");
+  const novoTexto = prompt("Edite o aviso:");
+  if (!novoTexto) return;
 
-// ================== INIT ==================
+  try {
+    const res = await fetch(`${BASE_URL}/avisos/${index}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto: novoTexto })
+    });
+    await res.json();
+    carregarAvisos();
+  } catch (err) {
+    alert("Erro ao editar aviso: " + err.message);
+  }
+}
+
+// ====================== REGISTROS ======================
+async function registrarQRT() {
+  const passaporte = document.getElementById("qrtPassaporte").value;
+  const quantidade = parseInt(document.getElementById("qrtQuantidade").value);
+  if (!passaporte || !quantidade) return alert("Dados inválidos!");
+
+  try {
+    const res = await fetch(`${BASE_URL}/gtms/${passaporte}/pontos`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo: "qrt", valor: quantidade })
+    });
+    await res.json();
+    atualizarRanking();
+    alert("QRT registrado!");
+  } catch (err) {
+    alert("Erro ao registrar QRT: " + err.message);
+  }
+}
+
+async function registrarAcompanhamento() {
+  const passaporte = document.getElementById("acompPassaporte").value;
+  const status = document.getElementById("acompStatus").value;
+  if (!passaporte || !status) return alert("Dados inválidos!");
+
+  try {
+    const res = await fetch(`${BASE_URL}/gtms/${passaporte}/pontos`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo: "acomp", status })
+    });
+    await res.json();
+    atualizarRanking();
+    alert("Acompanhamento registrado!");
+  } catch (err) {
+    alert("Erro ao registrar acompanhamento: " + err.message);
+  }
+}
+
+async function registrarPrisao() {
+  const passaporteGTM = document.getElementById("prisaoPassaporteGTM").value;
+  const nomePreso = document.getElementById("nomePreso").value;
+  const passaportePreso = document.getElementById("passaportePreso").value;
+  const qtd = parseInt(document.getElementById("qtdPresos").value);
+  if (!passaporteGTM || !nomePreso || !passaportePreso || !qtd)
+    return alert("Preencha todos os campos!");
+
+  try {
+    const res = await fetch(`${BASE_URL}/gtms/${passaporteGTM}/pontos`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo: "prisao", valor: qtd, nomePreso, passaportePreso })
+    });
+    await res.json();
+    atualizarRanking();
+    alert("Prisão registrada!");
+  } catch (err) {
+    alert("Erro ao registrar prisão: " + err.message);
+  }
+}
+
+// ====================== ZERAR PONTUAÇÃO ======================
+async function zerarPontuacao() {
+  if (!comandoLogado) return alert("Acesso negado!");
+  try {
+    await fetch(`${BASE_URL}/gtms/zerar-pontos`, { method: "PUT" });
+    atualizarRanking();
+    alert("Pontuação zerada com sucesso!");
+  } catch (err) {
+    alert("Erro ao zerar pontuação: " + err.message);
+  }
+}
+
+// ====================== AUTO ======================
 atualizarRanking();
-atualizarAvisos();
+carregarAvisos();
