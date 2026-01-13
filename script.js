@@ -1,5 +1,8 @@
 const API = "https://gtm-backend-8mh0.onrender.com/api";
 
+let comandoLogado = false;
+
+
 // ===================== AUTO LOAD =====================
 document.addEventListener("DOMContentLoaded", () => {
   carregarRanking();
@@ -213,6 +216,8 @@ async function carregarAvisos() {
     const res = await fetch(`${API}/avisos`);
     const avisos = await res.json();
 
+    console.log("Avisos recebidos:", avisos);
+
     const ul = document.getElementById("listaAvisos");
     ul.innerHTML = "";
 
@@ -226,24 +231,17 @@ async function carregarAvisos() {
         dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
         "h";
 
-      let cabecalho = `<strong>${dataFormatada}</strong><br>`;
-
-      if (a.posto && a.nome) {
-        cabecalho = `<strong>${a.posto} ${a.nome}</strong> - ${dataFormatada}<br>`;
-      }
-
       let botoes = "";
       if (comandoLogado) {
         botoes = `
           <div style="margin-top:5px;">
-            <button onclick="editarAviso(${a.id})">✏️</button>
             <button onclick="apagarAviso(${a.id})">🗑️</button>
           </div>
         `;
       }
 
       li.innerHTML = `
-        ${cabecalho}
+        <strong>${dataFormatada}</strong><br>
         ${a.texto}
         ${botoes}
       `;
@@ -255,7 +253,6 @@ async function carregarAvisos() {
     console.error("Erro ao carregar avisos:", err);
   }
 }
-
 // ====================== APAGAR AVISO ======================
 async function apagarAviso(id) {
   if (!confirm("Tem certeza que deseja apagar este aviso?")) return;
@@ -308,15 +305,22 @@ async function editarAviso(id) {
 // ===================== PAINEL =====================
 function entrarPainel() {
   const senha = document.getElementById("senhaComando").value;
+
   if (senha === "gtmcomando123") {
+    comandoLogado = true;
     document.getElementById("painelComando").style.display = "block";
+    document.getElementById("btnZerarRanking").style.display = "inline-block";
+    carregarAvisos(); // 🔥 IMPORTANTE: força re-render
   } else {
     alert("Senha incorreta!");
   }
 }
 
 function fecharPainel() {
+  comandoLogado = false;
   document.getElementById("painelComando").style.display = "none";
+  document.getElementById("btnZerarRanking").style.display = "none";
+  carregarAvisos(); // 🔥 IMPORTANTE: força re-render
 }
 
 // ===================== UTIL =====================
