@@ -1,6 +1,6 @@
-const BACKEND_URL = "https://gtm-backend-8mh0.onrender.com/api"; // ADICIONADO /api
+const BACKEND_URL = "https://gtm-backend-8mh0.onrender.com/api";
 
-let gtms = []; // GTMs carregados do backend
+let gtms = [];
 let servicoAtual = null;
 let intervalo = null;
 let comandoLogado = false;
@@ -31,22 +31,21 @@ async function cadastrarGTM() {
   }
 
   try {
-    const res = await fetch(`${BACKEND_URL}/cadastrar`, {
+    const res = await fetch(`${BACKEND_URL}/gtm`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ posto, nome, passaporte, funcao })
     });
-
     const data = await res.json();
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("GTM cadastrado com sucesso!");
       document.getElementById("posto").value = "";
       document.getElementById("nomeGuerra").value = "";
       document.getElementById("passaporte").value = "";
       document.getElementById("funcao").value = "";
       carregarGTMs();
     } else {
-      alert(data.mensagem || "Erro ao cadastrar GTM");
+      alert(data.error || "Erro ao cadastrar GTM");
     }
   } catch (err) {
     console.error("Erro ao cadastrar GTM:", err);
@@ -59,42 +58,29 @@ function iniciarServico() {
   const passaporte = document.getElementById("passaporteServico").value;
   const gtm = gtms.find(g => g.passaporte === passaporte);
 
-  if (!gtm) {
-    alert("GTM não encontrado!");
-    return;
-  }
-  if (servicoAtual) {
-    alert("Já existe um serviço em andamento!");
-    return;
-  }
+  if (!gtm) return alert("GTM não encontrado!");
+  if (servicoAtual) return alert("Já existe um serviço em andamento!");
 
   servicoAtual = { passaporte, inicio: Date.now() };
   iniciarCronometro();
 }
 
 async function finalizarServico() {
-  if (!servicoAtual) {
-    alert("Nenhum serviço em andamento!");
-    return;
-  }
-  const fim = Date.now();
-  const duracaoHoras = (fim - servicoAtual.inicio) / (1000 * 60 * 60);
+  if (!servicoAtual) return alert("Nenhum serviço em andamento!");
+  const duracaoHoras = (Date.now() - servicoAtual.inicio) / (1000 * 60 * 60);
 
   try {
-    const res = await fetch(`${BACKEND_URL}/finalizar-servico`, {
+    const res = await fetch(`${BACKEND_URL}/finalizar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passaporte: servicoAtual.passaporte, horas: duracaoHoras })
+      body: JSON.stringify({ passaporte: servicoAtual.passaporte, duracaoHoras })
     });
     const data = await res.json();
-
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("Serviço finalizado!");
       servicoAtual = null;
       pararCronometro();
       carregarGTMs();
-    } else {
-      alert(data.mensagem || "Erro ao finalizar serviço");
     }
   } catch (err) {
     console.error("Erro ao finalizar serviço:", err);
@@ -105,14 +91,14 @@ async function finalizarServico() {
 function iniciarCronometro() {
   const inicio = Date.now();
   intervalo = setInterval(() => {
-    const agora = Date.now();
-    const diff = agora - inicio;
+    const diff = Date.now() - inicio;
     const horas = String(Math.floor(diff / 3600000)).padStart(2, "0");
     const minutos = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
     const segundos = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
     document.getElementById("cronometro").innerText = `${horas}:${minutos}:${segundos}`;
   }, 1000);
 }
+
 function pararCronometro() {
   clearInterval(intervalo);
   document.getElementById("cronometro").innerText = "00:00:00";
@@ -142,14 +128,14 @@ async function registrarQRT() {
   if (!passaporte || !quantidade) return alert("Preencha os campos corretamente!");
 
   try {
-    const res = await fetch(`${BACKEND_URL}/registrar-qrt`, {
+    const res = await fetch(`${BACKEND_URL}/pontuar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passaporte, quantidade })
+      body: JSON.stringify({ passaporte, pontos: quantidade })
     });
     const data = await res.json();
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("QRT registrado!");
       carregarGTMs();
     }
   } catch (err) {
@@ -169,8 +155,8 @@ async function registrarAcompanhamento() {
       body: JSON.stringify({ passaporte, status })
     });
     const data = await res.json();
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("Acompanhamento registrado!");
       carregarGTMs();
     }
   } catch (err) {
@@ -192,8 +178,8 @@ async function registrarPrisao() {
       body: JSON.stringify({ passaporteGTM, nomePreso, passaportePreso, qtd })
     });
     const data = await res.json();
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("Prisão registrada!");
       carregarGTMs();
     }
   } catch (err) {
@@ -224,14 +210,10 @@ function fecharPainel() {
 async function exonerarGTM() {
   const passaporte = document.getElementById("passaporteExonerar").value;
   try {
-    const res = await fetch(`${BACKEND_URL}/exonerar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passaporte })
-    });
+    const res = await fetch(`${BACKEND_URL}/gtm/${passaporte}`, { method: "DELETE" });
     const data = await res.json();
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("GTM exonerado!");
       carregarGTMs();
     }
   } catch (err) {
@@ -239,6 +221,7 @@ async function exonerarGTM() {
   }
 }
 
+// ====================== AVISOS ======================
 async function enviarAviso() {
   const texto = document.getElementById("avisoTexto").value;
   if (!texto) return alert("Digite o aviso!");
@@ -246,13 +229,13 @@ async function enviarAviso() {
     const res = await fetch(`${BACKEND_URL}/avisos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto })
+      body: JSON.stringify({ texto, data: new Date().toLocaleString() })
     });
     const data = await res.json();
-    if (data.sucesso) {
+    if (data.success) {
       document.getElementById("avisoTexto").value = "";
       carregarAvisos();
-      alert(data.mensagem);
+      alert("Aviso enviado!");
     }
   } catch (err) {
     console.error(err);
@@ -267,7 +250,7 @@ async function carregarAvisos() {
     ul.innerHTML = "";
     avisos.forEach((a, index) => {
       const li = document.createElement("li");
-      let botoes = comandoLogado ? `<br><button onclick="apagarAviso(${index})">Apagar</button>` : "";
+      const botoes = comandoLogado ? `<br><button onclick="apagarAviso(${index})">Apagar</button>` : "";
       li.innerHTML = `<strong>${a.data}</strong><br>${a.texto}${botoes}`;
       ul.appendChild(li);
     });
@@ -282,7 +265,7 @@ async function apagarAviso(index) {
   try {
     const res = await fetch(`${BACKEND_URL}/avisos/${aviso.id}`, { method: "DELETE" });
     const data = await res.json();
-    if (data.sucesso) carregarAvisos();
+    if (data.success) carregarAvisos();
   } catch (err) {
     console.error(err);
   }
@@ -292,10 +275,10 @@ async function apagarAviso(index) {
 async function zerarRanking() {
   if (!comandoLogado) return alert("Acesso negado!");
   try {
-    const res = await fetch(`${BACKEND_URL}/zerar-ranking`, { method: "POST" });
+    const res = await fetch(`${BACKEND_URL}/zerar`, { method: "POST" });
     const data = await res.json();
-    if (data.sucesso) {
-      alert(data.mensagem);
+    if (data.success) {
+      alert("Ranking zerado!");
       carregarGTMs();
     }
   } catch (err) {
