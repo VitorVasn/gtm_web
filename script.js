@@ -153,6 +153,7 @@ function atualizarRanking() {
     tr.innerHTML = `
       <td>${g.posto}</td>
       <td>${g.nome}</td>
+      <td>${g.passaporte}</td>
       <td>${g.horas.toFixed(2)} h</td>
       <td>${g.pontos}</td>
     `;
