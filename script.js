@@ -219,15 +219,9 @@ async function carregarAvisos() {
     const ul = document.getElementById("listaAvisos");
     ul.innerHTML = "";
 
-    const brasiliaOffset = -3; // UTC-3
     avisos.forEach((a) => {
-      const dataObj = new Date(a.data);
-      const horaBrasilia = new Date(dataObj.getTime() + brasiliaOffset * 60 * 60 * 1000);
-      const dataFormatada =
-        horaBrasilia.toLocaleDateString("pt-BR") +
-        " - " +
-        horaBrasilia.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
-        "h";
+      // Já vem no formato "dd/mm/yyyy hh:mm:ss", então não precisa converter
+      const dataFormatada = a.data;
 
       let botoes = "";
       if (comandoLogado) {
