@@ -8,7 +8,7 @@
 
 <body>
 
-  <!-- CABEÇALHO -->
+  <!-- ================== CABEÇALHO ================== -->
   <header class="topo">
     <img src="images/gtm.png" class="logo esquerda">
     <h1>GTM - GRUPAMENTO TÁTICO DE MOTOCICLETAS</h1>
@@ -42,58 +42,59 @@
 
   <!-- ================== REGISTROS OPERACIONAIS ================== -->
   <section class="card">
-    <h2>Registros Operacionais - GTM</h2>
+    <h2>Registros Operacionais</h2>
 
-    <!-- QRT -->
-    <h3>🚨 QRT - Socorro a Oficiais</h3>
+    <h3>🚨 QRT</h3>
     <input type="text" id="qrtPassaporte" placeholder="Passaporte do GTM">
-    <input type="number" id="qrtQuantidade" placeholder="Quantidade de QRTs">
+    <input type="number" id="qrtQuantidade" placeholder="Quantidade">
     <button onclick="registrarQRT()">Registrar QRT</button>
 
     <hr>
 
-    <!-- ACOMPANHAMENTO -->
     <h3>🏍️ Acompanhamento</h3>
     <input type="text" id="acompPassaporte" placeholder="Passaporte do GTM">
     <select id="acompStatus">
-      <option value="">Status do Acompanhamento</option>
+      <option value="">Status</option>
       <option value="concluido">Concluído</option>
       <option value="qta">QTA (caiu)</option>
     </select>
-    <button onclick="registrarAcompanhamento()">Registrar Acompanhamento</button>
+    <button onclick="registrarAcompanhamento()">Registrar</button>
 
     <hr>
 
-    <!-- PRISÃO -->
     <h3>🔒 Prisão</h3>
     <input type="text" id="prisaoPassaporteGTM" placeholder="Passaporte do GTM">
     <input type="text" id="nomePreso" placeholder="Nome do Preso">
     <input type="text" id="passaportePreso" placeholder="Passaporte do Preso">
-    <input type="number" id="qtdPresos" placeholder="Quantidade de Presos">
+    <input type="number" id="qtdPresos" placeholder="Qtd Presos">
     <button onclick="registrarPrisao()">Registrar Prisão</button>
   </section>
 
   <!-- ================== RANKING ================== -->
   <section class="card">
-    <h2>Ranking por Horas de Serviço</h2>
+    <h2>Ranking GTM</h2>
     <table>
       <thead>
-      <tr>
-        <th>Posto</th>
-        <th>Nome de Guerra</th>
-        <th>Passaporte</th>
-        <th>Horas</th>
-        <th>Pontos</th>
-      </tr>
-    </thead>
-
+        <tr>
+          <th>Posto</th>
+          <th>Nome</th>
+          <th>Passaporte</th>
+          <th>Horas</th>
+          <th>Pontos</th>
+        </tr>
+      </thead>
       <tbody id="ranking"></tbody>
     </table>
+
+    <!-- BOTÃO ZERAR RANKING -->
+    <div style="margin-top:10px;">
+      <button onclick="zerarRanking()">🧨 Zerar Ranking (Comando)</button>
+    </div>
   </section>
 
-  <!-- ================== PAINEL DO COMANDO ================== -->
+  <!-- ================== PAINEL COMANDO ================== -->
   <section class="card">
-    <h2>Painel do Comando / Subcomando</h2>
+    <h2>Painel do Comando</h2>
 
     <input type="password" id="senhaComando" placeholder="Senha do Comando">
     <button onclick="entrarPainel()">Entrar no Painel</button>
@@ -102,21 +103,25 @@
 
       <button onclick="fecharPainel()">Fechar Painel</button>
 
-      <h3>Exonerar Piloto</h3>
+      <h3>Exonerar GTM</h3>
       <input type="text" id="passaporteExonerar" placeholder="Passaporte do GTM">
-      <button onclick="exonerarGTM()">Exonerar / Deletar</button>
+      <button onclick="exonerarGTM()">Exonerar</button>
 
       <hr>
 
-      <h3>Enviar Advertência / Aviso</h3>
-      <textarea id="avisoTexto" placeholder="Digite o aviso ou advertência..." rows="4"></textarea>
+      <h3>Avisos / Advertências</h3>
+      <textarea id="avisoTexto" placeholder="Digite o aviso..." rows="4"></textarea>
       <button onclick="enviarAviso()">Publicar Aviso</button>
+
+      <div style="margin-top:10px;">
+        <button onclick="apagarTodosAvisos()">🗑️ Apagar Todos Avisos</button>
+      </div>
     </div>
   </section>
 
   <!-- ================== QUADRO DE AVISOS ================== -->
   <section class="card">
-    <h2>Quadro de Avisos - GTM</h2>
+    <h2>Quadro de Avisos</h2>
     <ul id="listaAvisos"></ul>
   </section>
 
