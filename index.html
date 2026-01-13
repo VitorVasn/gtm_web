@@ -55,56 +55,6 @@
     </table>
   </section>
 
-  <!-- REGISTROS OPERACIONAIS -->
-  <section class="card">
-    <h2>Registros Operacionais - GTM</h2>
-
-    <h3>🚨 QRT - Socorro a Oficiais</h3>
-    <input type="text" id="qrtPassaporte" placeholder="Passaporte do GTM">
-    <input type="number" id="qrtQuantidade" placeholder="Quantidade de QRTs">
-    <button onclick="registrarQRT()">Registrar QRT</button>
-    <hr>
-
-    <h3>🏍️ Acompanhamento</h3>
-    <input type="text" id="acompPassaporte" placeholder="Passaporte do GTM">
-    <select id="acompStatus">
-      <option value="">Status do Acompanhamento</option>
-      <option value="concluido">Concluído</option>
-      <option value="qta">QTA (caiu)</option>
-    </select>
-    <button onclick="registrarAcompanhamento()">Registrar Acompanhamento</button>
-    <hr>
-
-    <h3>🔒 Prisão</h3>
-    <input type="text" id="prisaoPassaporteGTM" placeholder="Passaporte do GTM">
-    <input type="text" id="nomePreso" placeholder="Nome do Preso">
-    <input type="text" id="passaportePreso" placeholder="Passaporte do Preso">
-    <input type="number" id="qtdPresos" placeholder="Quantidade de Presos">
-    <button onclick="registrarPrisao()">Registrar Prisão</button>
-  </section>
-
-  <!-- PAINEL DO COMANDO -->
-  <section class="card">
-    <h2>Painel do Comando / Subcomando</h2>
-    <input type="password" id="senhaComando" placeholder="Senha do Comando">
-    <button onclick="entrarPainel()">Entrar no Painel</button>
-
-    <div id="painelComando" style="display:none; margin-top:15px;">
-      <button onclick="fecharPainel()">Fechar Painel</button>
-
-      <h3>Exonerar Piloto</h3>
-      <input type="text" id="passaporteExonerar" placeholder="Passaporte do GTM">
-      <button onclick="exonerarGTM()">Exonerar / Deletar</button>
-
-      <h3>Enviar Advertência / Aviso</h3>
-      <textarea id="avisoTexto" placeholder="Digite o aviso ou advertência..." rows="4"></textarea>
-      <button onclick="enviarAviso()">Publicar Aviso</button>
-
-      <h3>Zerar Ranking</h3>
-      <button onclick="zerarRanking()">Zerar Pontos</button>
-    </div>
-  </section>
-
   <!-- QUADRO DE AVISOS -->
   <section class="card">
     <h2>Quadro de Avisos - GTM</h2>
