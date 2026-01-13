@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://gtm-backend-8mh0.onrender.com";
+const BACKEND_URL = "https://gtm-backend-8mh0.onrender.com/api"; // ADICIONADO /api
 
 let gtms = []; // GTMs carregados do backend
 let servicoAtual = null;
@@ -139,7 +139,6 @@ function atualizarRanking() {
 async function registrarQRT() {
   const passaporte = document.getElementById("qrtPassaporte").value;
   const quantidade = parseInt(document.getElementById("qrtQuantidade").value);
-
   if (!passaporte || !quantidade) return alert("Preencha os campos corretamente!");
 
   try {
@@ -284,7 +283,9 @@ async function apagarAviso(index) {
     const res = await fetch(`${BACKEND_URL}/avisos/${aviso.id}`, { method: "DELETE" });
     const data = await res.json();
     if (data.sucesso) carregarAvisos();
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // ====================== ZERAR PONTOS ======================
