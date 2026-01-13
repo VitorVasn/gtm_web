@@ -187,7 +187,7 @@ async function enviarAviso() {
   }
 
   try {
-    const res = await fetch(`${BACKEND_URL}/avisos`, {
+    const res = await fetch(`${API}/avisos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ texto })
@@ -207,11 +207,10 @@ async function enviarAviso() {
   }
 }
 
-
 // ====================== CARREGAR AVISOS ======================
 async function carregarAvisos() {
   try {
-    const res = await fetch(`${BACKEND_URL}/avisos`);
+    const res = await fetch(`${API}/avisos`);
     const avisos = await res.json();
 
     const ul = document.getElementById("listaAvisos");
@@ -227,12 +226,10 @@ async function carregarAvisos() {
         dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
         "h";
 
-      let cabecalho = "";
+      let cabecalho = `<strong>${dataFormatada}</strong><br>`;
 
       if (a.posto && a.nome) {
         cabecalho = `<strong>${a.posto} ${a.nome}</strong> - ${dataFormatada}<br>`;
-      } else {
-        cabecalho = `<strong>${dataFormatada}</strong><br>`;
       }
 
       let botoes = "";
@@ -259,30 +256,28 @@ async function carregarAvisos() {
   }
 }
 
-
 // ====================== APAGAR AVISO ======================
 async function apagarAviso(id) {
   if (!confirm("Tem certeza que deseja apagar este aviso?")) return;
 
   try {
-    await fetch(`${BACKEND_URL}/avisos/${id}`, { method: "DELETE" });
+    await fetch(`${API}/avisos/${id}`, { method: "DELETE" });
     carregarAvisos();
   } catch (err) {
     console.error("Erro ao apagar aviso:", err);
   }
 }
 
-
 // ====================== APAGAR TODOS AVISOS ======================
 async function apagarTodosAvisos() {
   if (!confirm("Tem certeza que deseja APAGAR TODOS os avisos?")) return;
 
   try {
-    const res = await fetch(`${BACKEND_URL}/avisos`);
+    const res = await fetch(`${API}/avisos`);
     const avisos = await res.json();
 
     await Promise.all(
-      avisos.map(a => fetch(`${BACKEND_URL}/avisos/${a.id}`, { method: "DELETE" }))
+      avisos.map(a => fetch(`${API}/avisos/${a.id}`, { method: "DELETE" }))
     );
 
     carregarAvisos();
@@ -291,7 +286,6 @@ async function apagarTodosAvisos() {
   }
 }
 
-
 // ====================== EDITAR AVISO ======================
 async function editarAviso(id) {
   const novoTexto = prompt("Editar aviso:");
@@ -299,7 +293,7 @@ async function editarAviso(id) {
   if (!novoTexto || novoTexto.trim() === "") return;
 
   try {
-    await fetch(`${BACKEND_URL}/avisos/${id}`, {
+    await fetch(`${API}/avisos/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ texto: novoTexto })
