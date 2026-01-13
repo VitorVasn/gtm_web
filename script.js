@@ -133,19 +133,32 @@ function registrarAcompanhamento() {
 }
 
 // ===================== PRISÃO =====================
-function registrarPrisao() {
-  const passaporteGTM = document.getElementById("prisaoPassaporteGTM").value;
-  const nomePreso = document.getElementById("nomePreso").value;
-  const passaportePreso = document.getElementById("passaportePreso").value;
-  const qtd = Number(document.getElementById("qtdPresos").value);
+async function registrarPrisao() {
+  const passaporteGTM = document.getElementById("prisaoPassaporteGTM").value.trim();
+  const nomePreso = document.getElementById("nomePreso").value.trim();
+  const passaportePreso = document.getElementById("passaportePreso").value.trim();
 
-  fetch(`${API}/registrar-prisao`, {
+  if (!passaporteGTM || !nomePreso || !passaportePreso) {
+    return alert("Preencha todos os campos!");
+  }
+
+  const payload = { passaporteGTM, nomePreso, passaportePreso };
+
+  const res = await fetch(`${API}/registrar-prisao`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ passaporteGTM, nomePreso, passaportePreso, qtd })
-  })
-    .then(res => res.json())
-    .then(() => carregarAvisos());
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+
+  if (data.sucesso) {
+    alert("Prisão registrada!");
+    carregarGTMs();
+    carregarAvisos();
+  } else {
+    alert(data.mensagem || "Erro ao registrar prisão");
+  }
 }
 
 // ===================== EXONERAR =====================
@@ -163,10 +176,14 @@ function zerarRanking() {
     .then(res => res.json())
     .then(() => carregarRanking());
 }
-
-// ===================== AVISOS =====================
+// ====================== ENVIAR AVISO ======================
 function enviarAviso() {
-  const texto = document.getElementById("avisoTexto").value;
+  const texto = document.getElementById("avisoTexto").value.trim();
+
+  if (!texto) {
+    alert("Digite o aviso!");
+    return;
+  }
 
   fetch(`${API}/avisos`, {
     method: "POST",
@@ -180,40 +197,95 @@ function enviarAviso() {
     });
 }
 
-function carregarAvisos() {
-  fetch(`${API}/avisos`)
-    .then(res => res.json())
-    .then(avisos => {
-      const lista = document.getElementById("listaAvisos");
-      lista.innerHTML = "";
 
-      avisos.forEach(a => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          ${a.data} - ${a.texto}
+// ====================== CARREGAR AVISOS ======================
+async function carregarAvisos() {
+  const res = await fetch(`${API}/avisos`);
+  const avisos = await res.json();
+
+  const ul = document.getElementById("listaAvisos");
+  ul.innerHTML = "";
+
+  avisos.forEach((a) => {
+    const li = document.createElement("li");
+
+    const dataObj = new Date(a.data);
+    const dataFormatada =
+      dataObj.toLocaleDateString("pt-BR") +
+      " - " +
+      dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
+      "h";
+
+    let cabecalho = "";
+
+    if (a.posto && a.nome) {
+      cabecalho = `<strong>${a.posto} ${a.nome}</strong> - ${dataFormatada}<br>`;
+    } else {
+      cabecalho = `<strong>${dataFormatada}</strong><br>`;
+    }
+
+    let botoes = "";
+    if (comandoLogado) {
+      botoes = `
+        <div style="margin-top:5px;">
+          <button onclick="editarAviso(${a.id})">✏️</button>
           <button onclick="apagarAviso(${a.id})">🗑️</button>
-        `;
-        lista.appendChild(li);
-      });
-    });
+        </div>
+      `;
+    }
+
+    li.innerHTML = `
+      ${cabecalho}
+      ${a.texto}
+      ${botoes}
+    `;
+
+    ul.appendChild(li);
+  });
 }
 
+
+// ====================== APAGAR AVISO ======================
 function apagarAviso(id) {
+  if (!confirm("Tem certeza que deseja apagar este aviso?")) return;
+
   fetch(`${API}/avisos/${id}`, { method: "DELETE" })
     .then(res => res.json())
     .then(() => carregarAvisos());
 }
 
+
+// ====================== APAGAR TODOS AVISOS ======================
 function apagarTodosAvisos() {
+  if (!confirm("Tem certeza que deseja APAGAR TODOS os avisos?")) return;
+
   fetch(`${API}/avisos`)
     .then(res => res.json())
     .then(avisos => {
-      avisos.forEach(a => {
-        fetch(`${API}/avisos/${a.id}`, { method: "DELETE" });
-      });
-      carregarAvisos();
+      const promises = avisos.map(a =>
+        fetch(`${API}/avisos/${a.id}`, { method: "DELETE" })
+      );
+
+      Promise.all(promises).then(() => carregarAvisos());
     });
 }
+
+
+// ====================== EDITAR AVISO ======================
+function editarAviso(id) {
+  const novoTexto = prompt("Editar aviso:");
+
+  if (!novoTexto || novoTexto.trim() === "") return;
+
+  fetch(`${API}/avisos/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ texto: novoTexto })
+  })
+    .then(res => res.json())
+    .then(() => carregarAvisos());
+}
+
 
 // ===================== PAINEL =====================
 function entrarPainel() {
