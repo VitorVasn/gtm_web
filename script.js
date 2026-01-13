@@ -176,8 +176,9 @@ function zerarRanking() {
     .then(res => res.json())
     .then(() => carregarRanking());
 }
-// ====================== ENVIAR AVISO ======================
-function enviarAviso() {
+// ====================== AVISOS ======================
+
+async function enviarAviso() {
   const texto = document.getElementById("avisoTexto").value.trim();
 
   if (!texto) {
@@ -185,107 +186,130 @@ function enviarAviso() {
     return;
   }
 
-  fetch(`${API}/avisos`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ texto })
-  })
-    .then(res => res.json())
-    .then(() => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/avisos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto })
+    });
+
+    const data = await res.json();
+
+    if (data.sucesso) {
       document.getElementById("avisoTexto").value = "";
       carregarAvisos();
-    });
+    } else {
+      alert(data.mensagem || "Erro ao enviar aviso");
+    }
+  } catch (err) {
+    console.error("Erro ao enviar aviso:", err);
+    alert("Erro ao conectar com o servidor de avisos");
+  }
 }
 
 
 // ====================== CARREGAR AVISOS ======================
 async function carregarAvisos() {
-  const res = await fetch(`${API}/avisos`);
-  const avisos = await res.json();
+  try {
+    const res = await fetch(`${BACKEND_URL}/avisos`);
+    const avisos = await res.json();
 
-  const ul = document.getElementById("listaAvisos");
-  ul.innerHTML = "";
+    const ul = document.getElementById("listaAvisos");
+    ul.innerHTML = "";
 
-  avisos.forEach((a) => {
-    const li = document.createElement("li");
+    avisos.forEach((a) => {
+      const li = document.createElement("li");
 
-    const dataObj = new Date(a.data);
-    const dataFormatada =
-      dataObj.toLocaleDateString("pt-BR") +
-      " - " +
-      dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
-      "h";
+      const dataObj = new Date(a.data);
+      const dataFormatada =
+        dataObj.toLocaleDateString("pt-BR") +
+        " - " +
+        dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
+        "h";
 
-    let cabecalho = "";
+      let cabecalho = "";
 
-    if (a.posto && a.nome) {
-      cabecalho = `<strong>${a.posto} ${a.nome}</strong> - ${dataFormatada}<br>`;
-    } else {
-      cabecalho = `<strong>${dataFormatada}</strong><br>`;
-    }
+      if (a.posto && a.nome) {
+        cabecalho = `<strong>${a.posto} ${a.nome}</strong> - ${dataFormatada}<br>`;
+      } else {
+        cabecalho = `<strong>${dataFormatada}</strong><br>`;
+      }
 
-    let botoes = "";
-    if (comandoLogado) {
-      botoes = `
-        <div style="margin-top:5px;">
-          <button onclick="editarAviso(${a.id})">✏️</button>
-          <button onclick="apagarAviso(${a.id})">🗑️</button>
-        </div>
+      let botoes = "";
+      if (comandoLogado) {
+        botoes = `
+          <div style="margin-top:5px;">
+            <button onclick="editarAviso(${a.id})">✏️</button>
+            <button onclick="apagarAviso(${a.id})">🗑️</button>
+          </div>
+        `;
+      }
+
+      li.innerHTML = `
+        ${cabecalho}
+        ${a.texto}
+        ${botoes}
       `;
-    }
 
-    li.innerHTML = `
-      ${cabecalho}
-      ${a.texto}
-      ${botoes}
-    `;
+      ul.appendChild(li);
+    });
 
-    ul.appendChild(li);
-  });
+  } catch (err) {
+    console.error("Erro ao carregar avisos:", err);
+  }
 }
 
 
 // ====================== APAGAR AVISO ======================
-function apagarAviso(id) {
+async function apagarAviso(id) {
   if (!confirm("Tem certeza que deseja apagar este aviso?")) return;
 
-  fetch(`${API}/avisos/${id}`, { method: "DELETE" })
-    .then(res => res.json())
-    .then(() => carregarAvisos());
+  try {
+    await fetch(`${BACKEND_URL}/avisos/${id}`, { method: "DELETE" });
+    carregarAvisos();
+  } catch (err) {
+    console.error("Erro ao apagar aviso:", err);
+  }
 }
 
 
 // ====================== APAGAR TODOS AVISOS ======================
-function apagarTodosAvisos() {
+async function apagarTodosAvisos() {
   if (!confirm("Tem certeza que deseja APAGAR TODOS os avisos?")) return;
 
-  fetch(`${API}/avisos`)
-    .then(res => res.json())
-    .then(avisos => {
-      const promises = avisos.map(a =>
-        fetch(`${API}/avisos/${a.id}`, { method: "DELETE" })
-      );
+  try {
+    const res = await fetch(`${BACKEND_URL}/avisos`);
+    const avisos = await res.json();
 
-      Promise.all(promises).then(() => carregarAvisos());
-    });
+    await Promise.all(
+      avisos.map(a => fetch(`${BACKEND_URL}/avisos/${a.id}`, { method: "DELETE" }))
+    );
+
+    carregarAvisos();
+  } catch (err) {
+    console.error("Erro ao apagar todos avisos:", err);
+  }
 }
 
 
 // ====================== EDITAR AVISO ======================
-function editarAviso(id) {
+async function editarAviso(id) {
   const novoTexto = prompt("Editar aviso:");
 
   if (!novoTexto || novoTexto.trim() === "") return;
 
-  fetch(`${API}/avisos/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ texto: novoTexto })
-  })
-    .then(res => res.json())
-    .then(() => carregarAvisos());
-}
+  try {
+    await fetch(`${BACKEND_URL}/avisos/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto: novoTexto })
+    });
 
+    carregarAvisos();
+  } catch (err) {
+    console.error("Erro ao editar aviso:", err);
+  }
+}
 
 // ===================== PAINEL =====================
 function entrarPainel() {
