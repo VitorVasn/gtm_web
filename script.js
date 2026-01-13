@@ -2,7 +2,6 @@ const API = "https://gtm-backend-8mh0.onrender.com/api";
 
 let comandoLogado = false;
 
-
 // ===================== AUTO LOAD =====================
 document.addEventListener("DOMContentLoaded", () => {
   carregarRanking();
@@ -15,6 +14,8 @@ function cadastrarGTM() {
   const nome = document.getElementById("nomeGuerra").value;
   const passaporte = document.getElementById("passaporte").value;
   const funcao = document.getElementById("funcao").value;
+
+  if (!posto || !nome || !passaporte || !funcao) return alert("Preencha todos os campos!");
 
   fetch(`${API}/gtm`, {
     method: "POST",
@@ -60,10 +61,7 @@ function iniciarServico() {
 }
 
 function finalizarServico() {
-  if (!inicioServico) {
-    alert("Nenhum serviço em andamento!");
-    return;
-  }
+  if (!inicioServico) return alert("Nenhum serviço em andamento!");
 
   const fim = new Date();
   const diffMs = fim - inicioServico;
@@ -110,6 +108,8 @@ function pararCronometro() {
 function registrarQRT() {
   const passaporte = document.getElementById("qrtPassaporte").value;
   const qtd = Number(document.getElementById("qrtQuantidade").value);
+  if (!passaporte || !qtd) return alert("Preencha passaporte e quantidade!");
+
   const pontos = qtd * 2;
 
   fetch(`${API}/pontuar`, {
@@ -125,6 +125,7 @@ function registrarQRT() {
 function registrarAcompanhamento() {
   const passaporte = document.getElementById("acompPassaporte").value;
   const status = document.getElementById("acompStatus").value;
+  if (!passaporte || !status) return alert("Preencha passaporte e status!");
 
   fetch(`${API}/registrar-acomp`, {
     method: "POST",
@@ -141,9 +142,7 @@ async function registrarPrisao() {
   const nomePreso = document.getElementById("nomePreso").value.trim();
   const passaportePreso = document.getElementById("passaportePreso").value.trim();
 
-  if (!passaporteGTM || !nomePreso || !passaportePreso) {
-    return alert("Preencha todos os campos!");
-  }
+  if (!passaporteGTM || !nomePreso || !passaportePreso) return alert("Preencha todos os campos!");
 
   const payload = { passaporteGTM, nomePreso, passaportePreso };
 
@@ -154,10 +153,9 @@ async function registrarPrisao() {
   });
 
   const data = await res.json();
-
   if (data.sucesso) {
     alert("Prisão registrada!");
-    carregarGTMs();
+    carregarRanking();
     carregarAvisos();
   } else {
     alert(data.mensagem || "Erro ao registrar prisão");
@@ -167,6 +165,7 @@ async function registrarPrisao() {
 // ===================== EXONERAR =====================
 function exonerarGTM() {
   const passaporte = document.getElementById("passaporteExonerar").value;
+  if (!passaporte) return alert("Preencha o passaporte!");
 
   fetch(`${API}/gtm/${passaporte}`, { method: "DELETE" })
     .then(res => res.json())
@@ -179,25 +178,23 @@ function zerarRanking() {
     .then(res => res.json())
     .then(() => carregarRanking());
 }
-// ====================== AVISOS ======================
 
+// ====================== AVISOS ======================
 async function enviarAviso() {
   const texto = document.getElementById("avisoTexto").value.trim();
+  if (!texto) return alert("Digite o aviso!");
 
-  if (!texto) {
-    alert("Digite o aviso!");
-    return;
-  }
+  const payload = { texto };
+  if (comandoLogado) payload.nomeGuerra = "Comando"; // 👈 Marca quem enviou
 
   try {
     const res = await fetch(`${API}/avisos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto })
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();
-
     if (data.sucesso) {
       document.getElementById("avisoTexto").value = "";
       carregarAvisos();
@@ -216,43 +213,38 @@ async function carregarAvisos() {
     const res = await fetch(`${API}/avisos`);
     const avisos = await res.json();
 
-    console.log("Avisos recebidos:", avisos);
-
     const ul = document.getElementById("listaAvisos");
     ul.innerHTML = "";
 
-    avisos.forEach((a) => {
+    avisos.forEach(a => {
       const li = document.createElement("li");
 
+      // Ajuste de fuso para Brasília (UTC-3)
       const dataObj = new Date(a.data);
-      const dataFormatada =
-        dataObj.toLocaleDateString("pt-BR") +
+      const utc = dataObj.getTime() + dataObj.getTimezoneOffset() * 60000;
+      const brasiliaTime = new Date(utc - 3 * 60 * 60000);
+
+      const dataFormatada = brasiliaTime.toLocaleDateString("pt-BR") +
         " - " +
-        dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) +
-        "h";
+        brasiliaTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + "h";
+
+      const nome = a.nomeGuerra || "Desconhecido";
 
       let botoes = "";
       if (comandoLogado) {
-        botoes = `
-          <div style="margin-top:5px;">
-            <button onclick="apagarAviso(${a.id})">🗑️</button>
-          </div>
-        `;
+        botoes = `<div style="margin-top:5px;">
+                    <button onclick="apagarAviso(${a.id})">🗑️</button>
+                  </div>`;
       }
 
-      li.innerHTML = `
-        <strong>${dataFormatada}</strong><br>
-        ${a.texto}
-        ${botoes}
-      `;
-
+      li.innerHTML = `<strong>${nome}</strong> - ${dataFormatada}<br>${a.texto}${botoes}`;
       ul.appendChild(li);
     });
-
   } catch (err) {
     console.error("Erro ao carregar avisos:", err);
   }
 }
+
 // ====================== APAGAR AVISO ======================
 async function apagarAviso(id) {
   if (!confirm("Tem certeza que deseja apagar este aviso?")) return;
@@ -286,7 +278,6 @@ async function apagarTodosAvisos() {
 // ====================== EDITAR AVISO ======================
 async function editarAviso(id) {
   const novoTexto = prompt("Editar aviso:");
-
   if (!novoTexto || novoTexto.trim() === "") return;
 
   try {
@@ -295,7 +286,6 @@ async function editarAviso(id) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ texto: novoTexto })
     });
-
     carregarAvisos();
   } catch (err) {
     console.error("Erro ao editar aviso:", err);
@@ -305,12 +295,10 @@ async function editarAviso(id) {
 // ===================== PAINEL =====================
 function entrarPainel() {
   const senha = document.getElementById("senhaComando").value;
-
   if (senha === "gtmcomando123") {
     comandoLogado = true;
     document.getElementById("painelComando").style.display = "block";
-    document.getElementById("btnZerarRanking").style.display = "inline-block";
-    carregarAvisos(); // 🔥 IMPORTANTE: força re-render
+    carregarAvisos(); // 🔥 re-render
   } else {
     alert("Senha incorreta!");
   }
@@ -319,8 +307,7 @@ function entrarPainel() {
 function fecharPainel() {
   comandoLogado = false;
   document.getElementById("painelComando").style.display = "none";
-  document.getElementById("btnZerarRanking").style.display = "none";
-  carregarAvisos(); // 🔥 IMPORTANTE: força re-render
+  carregarAvisos();
 }
 
 // ===================== UTIL =====================
