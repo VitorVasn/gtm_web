@@ -6,12 +6,24 @@ let intervalo = null;
 let comandoLogado = false;
 let avisos = [];
 
+// ====================== UTIL ======================
+function tratarResposta(res) {
+  return res.text().then(text => {
+    try {
+      return JSON.parse(text);
+    } catch {
+      console.error("Resposta do backend não é JSON válido:", text);
+      throw new Error("Resposta do backend não é JSON válido");
+    }
+  });
+}
+
 // ====================== CARREGAR GTMS ======================
 async function carregarGTMs() {
   try {
     const res = await fetch(`${BACKEND_URL}/gtms`);
-    if (!res.ok) throw new Error("Erro ao buscar GTMs");
-    gtms = await res.json();
+    if (!res.ok) throw new Error(`Erro ao buscar GTMs: ${res.status}`);
+    gtms = await tratarResposta(res);
     atualizarRanking();
   } catch (err) {
     console.error("Erro ao carregar GTMs:", err);
@@ -20,44 +32,44 @@ async function carregarGTMs() {
 
 // ====================== CADASTRO ======================
 async function cadastrarGTM() {
-  const posto = document.getElementById("posto").value;
-  const nome = document.getElementById("nomeGuerra").value;
-  const passaporte = document.getElementById("passaporte").value;
-  const funcao = document.getElementById("funcao").value;
+  const posto = document.getElementById("posto").value.trim();
+  const nome = document.getElementById("nomeGuerra").value.trim();
+  const passaporte = document.getElementById("passaporte").value.trim();
+  const funcao = document.getElementById("funcao").value.trim();
 
   if (!posto || !nome || !passaporte || !funcao) {
     alert("Preencha todos os campos!");
     return;
   }
 
+  const payload = { posto, nome, passaporte, funcao };
+  console.log("Enviando para backend:", payload);
+
   try {
     const res = await fetch(`${BACKEND_URL}/gtm`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ posto, nome, passaporte, funcao })
+      body: JSON.stringify(payload)
     });
-    const data = await res.json();
+
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("GTM cadastrado com sucesso!");
-      document.getElementById("posto").value = "";
-      document.getElementById("nomeGuerra").value = "";
-      document.getElementById("passaporte").value = "";
-      document.getElementById("funcao").value = "";
+      ["posto", "nomeGuerra", "passaporte", "funcao"].forEach(id => document.getElementById(id).value = "");
       carregarGTMs();
     } else {
       alert(data.error || "Erro ao cadastrar GTM");
     }
   } catch (err) {
     console.error("Erro ao cadastrar GTM:", err);
-    alert("Erro ao cadastrar GTM. Verifique o console.");
+    alert("Erro ao cadastrar GTM. Veja o console.");
   }
 }
 
 // ====================== INICIAR / FINALIZAR SERVIÇO ======================
 function iniciarServico() {
-  const passaporte = document.getElementById("passaporteServico").value;
+  const passaporte = document.getElementById("passaporteServico").value.trim();
   const gtm = gtms.find(g => g.passaporte === passaporte);
-
   if (!gtm) return alert("GTM não encontrado!");
   if (servicoAtual) return alert("Já existe um serviço em andamento!");
 
@@ -75,12 +87,15 @@ async function finalizarServico() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ passaporte: servicoAtual.passaporte, duracaoHoras })
     });
-    const data = await res.json();
+
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("Serviço finalizado!");
       servicoAtual = null;
       pararCronometro();
       carregarGTMs();
+    } else {
+      alert(data.error || "Erro ao finalizar serviço");
     }
   } catch (err) {
     console.error("Erro ao finalizar serviço:", err);
@@ -121,9 +136,9 @@ function atualizarRanking() {
   });
 }
 
-// ====================== QRT / ACOMPANHAMENTO / PRISÃO ======================
+// ====================== PONTUAÇÃO / QRT / ACOMPANHAMENTO / PRISÃO ======================
 async function registrarQRT() {
-  const passaporte = document.getElementById("qrtPassaporte").value;
+  const passaporte = document.getElementById("qrtPassaporte").value.trim();
   const quantidade = parseInt(document.getElementById("qrtQuantidade").value);
   if (!passaporte || !quantidade) return alert("Preencha os campos corretamente!");
 
@@ -133,19 +148,19 @@ async function registrarQRT() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ passaporte, pontos: quantidade })
     });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("QRT registrado!");
       carregarGTMs();
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao registrar QRT:", err);
   }
 }
 
 async function registrarAcompanhamento() {
-  const passaporte = document.getElementById("acompPassaporte").value;
-  const status = document.getElementById("acompStatus").value;
+  const passaporte = document.getElementById("acompPassaporte").value.trim();
+  const status = document.getElementById("acompStatus").value.trim();
   if (!passaporte || !status) return alert("Preencha os campos corretamente!");
 
   try {
@@ -154,20 +169,20 @@ async function registrarAcompanhamento() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ passaporte, status })
     });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("Acompanhamento registrado!");
       carregarGTMs();
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao registrar acompanhamento:", err);
   }
 }
 
 async function registrarPrisao() {
-  const passaporteGTM = document.getElementById("prisaoPassaporteGTM").value;
-  const nomePreso = document.getElementById("nomePreso").value;
-  const passaportePreso = document.getElementById("passaportePreso").value;
+  const passaporteGTM = document.getElementById("prisaoPassaporteGTM").value.trim();
+  const nomePreso = document.getElementById("nomePreso").value.trim();
+  const passaportePreso = document.getElementById("passaportePreso").value.trim();
   const qtd = parseInt(document.getElementById("qtdPresos").value);
   if (!passaporteGTM || !nomePreso || !passaportePreso || !qtd) return alert("Preencha todos os campos!");
 
@@ -177,13 +192,13 @@ async function registrarPrisao() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ passaporteGTM, nomePreso, passaportePreso, qtd })
     });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("Prisão registrada!");
       carregarGTMs();
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao registrar prisão:", err);
   }
 }
 
@@ -191,7 +206,7 @@ async function registrarPrisao() {
 const SENHA_COMANDO = "gtm2025";
 
 async function entrarPainel() {
-  const senha = document.getElementById("senhaComando").value;
+  const senha = document.getElementById("senhaComando").value.trim();
   if (senha === SENHA_COMANDO) {
     document.getElementById("painelComando").style.display = "block";
     comandoLogado = true;
@@ -208,54 +223,58 @@ function fecharPainel() {
 }
 
 async function exonerarGTM() {
-  const passaporte = document.getElementById("passaporteExonerar").value;
+  const passaporte = document.getElementById("passaporteExonerar").value.trim();
+  if (!passaporte) return alert("Digite o passaporte!");
   try {
     const res = await fetch(`${BACKEND_URL}/gtm/${passaporte}`, { method: "DELETE" });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("GTM exonerado!");
       carregarGTMs();
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao exonerar GTM:", err);
   }
 }
 
 // ====================== AVISOS ======================
 async function enviarAviso() {
-  const texto = document.getElementById("avisoTexto").value;
+  const texto = document.getElementById("avisoTexto").value.trim();
   if (!texto) return alert("Digite o aviso!");
+
+  const payload = { texto, data: new Date().toLocaleString() };
   try {
     const res = await fetch(`${BACKEND_URL}/avisos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto, data: new Date().toLocaleString() })
+      body: JSON.stringify(payload)
     });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) {
       document.getElementById("avisoTexto").value = "";
       carregarAvisos();
       alert("Aviso enviado!");
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao enviar aviso:", err);
   }
 }
 
 async function carregarAvisos() {
   try {
     const res = await fetch(`${BACKEND_URL}/avisos`);
-    avisos = await res.json();
+    avisos = await tratarResposta(res);
+
     const ul = document.getElementById("listaAvisos");
     ul.innerHTML = "";
     avisos.forEach((a, index) => {
-      const li = document.createElement("li");
       const botoes = comandoLogado ? `<br><button onclick="apagarAviso(${index})">Apagar</button>` : "";
+      const li = document.createElement("li");
       li.innerHTML = `<strong>${a.data}</strong><br>${a.texto}${botoes}`;
       ul.appendChild(li);
     });
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao carregar avisos:", err);
   }
 }
 
@@ -264,25 +283,25 @@ async function apagarAviso(index) {
   const aviso = avisos[index];
   try {
     const res = await fetch(`${BACKEND_URL}/avisos/${aviso.id}`, { method: "DELETE" });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) carregarAvisos();
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao apagar aviso:", err);
   }
 }
 
-// ====================== ZERAR PONTOS ======================
+// ====================== ZERAR RANKING ======================
 async function zerarRanking() {
   if (!comandoLogado) return alert("Acesso negado!");
   try {
     const res = await fetch(`${BACKEND_URL}/zerar`, { method: "POST" });
-    const data = await res.json();
+    const data = await tratarResposta(res);
     if (data.success) {
       alert("Ranking zerado!");
       carregarGTMs();
     }
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao zerar ranking:", err);
   }
 }
 
