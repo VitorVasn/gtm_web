@@ -58,7 +58,63 @@
   <!-- QUADRO DE AVISOS -->
   <section class="card">
     <h2>Quadro de Avisos - GTM</h2>
+    <input type="text" id="novoAviso" placeholder="Digite o aviso">
+    <button onclick="adicionarAviso()">Adicionar Aviso</button>
     <ul id="listaAvisos"></ul>
+  </section>
+
+  <!-- PAINEL DO COMANDO -->
+  <section class="card comando">
+    <h2>Painel do Comando</h2>
+
+    <div class="linha">
+      <input type="text" id="passaporteComando" placeholder="Passaporte do GTM">
+      <button onclick="promoverGTM()">Promover</button>
+      <button onclick="rebaixarGTM()">Rebaixar</button>
+      <button onclick="removerGTM()">Remover do GTM</button>
+    </div>
+
+    <div class="linha">
+      <select id="novaFuncao">
+        <option value="">Alterar Função</option>
+        <option value="Estagiário">Estagiário</option>
+        <option value="Piloto Oficial">Piloto Oficial</option>
+        <option value="Comando">Comando</option>
+        <option value="Subcomando">Subcomando</option>
+      </select>
+      <button onclick="alterarFuncao()">Alterar Função</button>
+    </div>
+  </section>
+
+  <!-- QRT -->
+  <section class="card">
+    <h2>QRT - Solicitação de Apoio</h2>
+    <input type="text" id="localQRT" placeholder="Local da ocorrência">
+    <input type="text" id="motivoQRT" placeholder="Motivo do QRT">
+    <button onclick="acionarQRT()">Acionar QRT</button>
+
+    <ul id="listaQRT"></ul>
+  </section>
+
+  <!-- ACOMPANHAMENTOS -->
+  <section class="card">
+    <h2>Acompanhamentos</h2>
+    <input type="text" id="passaporteAcompanhamento" placeholder="Passaporte do suspeito">
+    <input type="text" id="descricaoAcompanhamento" placeholder="Descrição do acompanhamento">
+    <button onclick="registrarAcompanhamento()">Registrar</button>
+
+    <ul id="listaAcompanhamentos"></ul>
+  </section>
+
+  <!-- PRISÕES -->
+  <section class="card">
+    <h2>Registro de Prisões</h2>
+    <input type="text" id="passaportePreso" placeholder="Passaporte do preso">
+    <input type="text" id="crime" placeholder="Crime">
+    <input type="text" id="pena" placeholder="Pena aplicada">
+    <button onclick="registrarPrisao()">Registrar Prisão</button>
+
+    <ul id="listaPrisoes"></ul>
   </section>
 
   <script src="script.js"></script>
