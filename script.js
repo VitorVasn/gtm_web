@@ -40,8 +40,14 @@ function carregarRanking() {
 
       dados.forEach(g => {
         const tr = document.createElement("tr");
+
+        let botaoAlterar = "";
+        if (comandoLogado) {
+          botaoAlterar = `<button onclick="alterarPatente('${g.passaporte}')">Alterar</button>`;
+        }
+
         tr.innerHTML = `
-          <td>${g.posto}</td>
+          <td>${g.posto} ${botaoAlterar}</td>
           <td>${g.nome}</td>
           <td>${g.passaporte}</td>
           <td>${g.horas.toFixed(2)} h</td>
@@ -51,7 +57,27 @@ function carregarRanking() {
       });
     });
 }
+// ===================== ALTERAR PATENTE =====================
+function alterarPatente(passaporte) {
+  const novaPatente = prompt("Digite a nova patente do GTM:");
+  if (!novaPatente) return;
 
+  fetch(`${API}/gtm/${passaporte}/patente`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ novaPatente })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.sucesso) {
+        alert(data.mensagem);
+        carregarRanking(); // Atualiza o ranking com a nova patente
+      } else {
+        alert(data.mensagem || "Erro ao alterar patente");
+      }
+    })
+    .catch(err => console.error("Erro ao alterar patente:", err));
+}
 // ===================== SERVIÇO =====================
 let inicioServico = null;
 
